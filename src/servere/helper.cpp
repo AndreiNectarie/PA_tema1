@@ -61,12 +61,10 @@ double solve(){
 
     while(high - low >= precision){
         mid = low + (high - low) / 2;
-        cout << "step: \n";
         double min_power = __DBL_MAX__;
         min_power = getMinPower(servers, mid);
         double left = getMinPower(servers, mid - precision);
         double right = getMinPower(servers, mid + precision);
-        cout << "mid: " << mid << " left: " << left << " min_power: " << min_power << " right: " << right << "\n";
         if(min_power >= left && min_power >= right){
             maxMinPower = max(maxMinPower, min_power);
             break;
