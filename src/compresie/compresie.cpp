@@ -6,7 +6,7 @@ using namespace std;
 void read_input(int &n, int &m, int arrayA[], int arrayB[]) {
     ifstream in("compresie.in");
 
-    if(!in.is_open()) {
+    if (!in.is_open()) {
         cerr << "Error opening file\n";
         exit(1);
     }
@@ -30,9 +30,9 @@ int main() {
     read_input(n, m, arrayA, arrayB);
     int i = 0, j = 0, sumA = 0, sumB = 0;
     int length = 0;
-    while(i < n && j < m) {
-        if(sumA == 0 && sumB == 0){
-            if(arrayA[i] == arrayB[j]){
+    while (i < n && j < m) {
+        if (sumA == 0 && sumB == 0) {
+            if (arrayA[i] == arrayB[j]) {
                 i++;
                 j++;
                 length++;
@@ -41,13 +41,13 @@ int main() {
             sumA += arrayA[i];
             sumB += arrayB[j];
         }
-        if(sumA == sumB){
+        if (sumA == sumB) {
             length++;
             sumA = 0;
             sumB = 0;
             i++;
             j++;
-        } else if(sumA < sumB){
+        } else if (sumA < sumB) {
             i++;
             sumA += arrayA[i];
         } else {

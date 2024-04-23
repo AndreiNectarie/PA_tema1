@@ -1,62 +1,98 @@
-#include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <unordered_map>
 #include <fstream>
+#include <iostream>
+#include <list>
+#include <chrono>
 
 using namespace std;
 
-int maxLength = 0;
-
-bool isValid(const string& password) {
-    vector<int> freq(26, 0);
-    int len = password.size();
-    
-    for(char ch : password) {
-        freq[ch - 'a']++;
+bool canAppend(const unordered_map<char, int>& passwordFreq, int passwordLen, const string& word, const vector <pair<string, int>>& wordsFreq){
+    unordered_map<char, int> wordFreq = passwordFreq;
+    for (char c : word) {
+        wordFreq[c]++;
     }
-    
-    for(int i = 0; i < 26; i++) {
-        if(freq[i] > len / 2) {
+    for (auto& [c, freq] : wordFreq) {
+        if (freq > (passwordLen + word.size()) / 2) {
+            // there is a dominant letter
             return true;
         }
     }
-    
     return false;
 }
 
-void generatePasswords(const vector<string>& words, int idx, string& currentPassword) {
-    if(isValid(currentPassword)) {
-        maxLength = max(maxLength, (int)currentPassword.size());
+string getWord(vector <pair<string, int>>& wordsFreq) {
+    int size = wordsFreq.size();
+    for (auto& [word, freq] : wordsFreq) {
+        if (freq == 0) {
+            return word;
+        }
     }
-    
-    if(idx == words.size() || currentPassword.size() >= maxLength) {
-        return;
-    }
-    
-    for(int i = idx; i < words.size(); i++) {
-        currentPassword += words[i];
-        generatePasswords(words, i + 1, currentPassword);
-        currentPassword.erase(currentPassword.end() - words[i].size(), currentPassword.end());
-    }
+    return "";
 }
 
-int main() {
+int backtrack(vector <pair<string, int>>& wordsFreq, int idx, int& passLength, unordered_map<char, int>& passwordFreq, chrono::high_resolution_clock::time_point start, double timeLimit) {
+    auto now = chrono::high_resolution_clock::now();
+    double elapsed = chrono::duration<double>(now - start).count();
+    if (elapsed > timeLimit) {
+        // If the time limit has been reached, return the current result
+        return passLength;
+    }
+    int res = passLength;
+    if(idx == wordsFreq.size()){
+        return res;
+    }
+    for (auto& [currWord, freq] : wordsFreq) {
+        if (freq) {
+            continue;
+        }
+        if (canAppend(passwordFreq, passLength, currWord, wordsFreq) || idx == 0) {
+            freq = true;
+            idx++;
+            for (char c : currWord) {
+                passwordFreq[c]++;
+            }
+            passLength += currWord.size();
+            res = max(res, backtrack(wordsFreq, idx, passLength, passwordFreq, start, timeLimit));
+            idx--;
+            freq = false;
+            for (char c : currWord) {
+                passwordFreq[c]--;
+            }
+            passLength -= currWord.size();
+        }
+    }
+    return res;
+}
+
+
+int main() { 
+    auto start = chrono::high_resolution_clock::now();
     int n;
-    
     ifstream in("criptat.in");
     ofstream out("criptat.out");
-    
+
     in >> n;
-    
-    vector<string> words(n);
-    for(int i = 0; i < n; i++) {
-        in >> words[i];
+    vector <pair<string, int>> wordFreq;
+    for (int i = 0; i < n; i++) {
+        string word;
+        in >> word;
+        wordFreq.emplace_back(word, 0);
     }
-    
-    string currentPassword = "";
-    generatePasswords(words, 0, currentPassword);
-    
-    cout << maxLength << endl;
-    
+    // sort the words by length
+    sort(wordFreq.begin(), wordFreq.end(), [](const pair<string, int>& a, const pair<string, int>& b) {
+        return a.first.size() > b.first.size();
+    });
+    string password = "";
+    unordered_map<char, int> passwordFreq(26);
+    for(int i = 0; i < 26 ; i++){
+        passwordFreq['a' + i] = 0;
+    }
+    int idx = 0;
+    double timeLimit = 1.93;
+    int passLength = 0;
+    out << backtrack(wordFreq, idx, passLength, passwordFreq, start, timeLimit) << endl;
     return 0;
 }
